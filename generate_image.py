@@ -8,6 +8,8 @@ from fastapi import HTTPException, File, UploadFile
 import asyncio
 import copy
 import random
+from PIL import Image
+from io import BytesIO
 
 COMFUI_OUTPUT_DIR = r"C:\Users\201-29\Downloads\StabilityMatrix-win-x64\Data\Packages\ComfyUI\output"
 COMFYUI_URL = "http://127.0.0.1:8188"
@@ -160,3 +162,87 @@ async def regenerate_image(emotion: str, image: UploadFile = File(...)):
     except Exception as e:
         print(f"Error in regenerate_image: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+    
+async def generate_image_websocket(uid: str, image_data : bytes):
+    print("generate_image_websocket 호출")
+    print(uid)
+    print(image_data)
+    print("===============================")   
+    try:
+        workflow = await load_workflow('workflow.json')
+        
+        emotions = ["joy", "sadness", "anger", "disgust", "serious"]
+        emotion_images = {}
+
+        for emotion in emotions:
+            try:
+                result = await make_character_websocket(prompt[emotion], copy.deepcopy(workflow), image_data, emotion)
+                emotion_images[emotion] = result
+                print(f"Generated image for {emotion}: {result}")
+            except Exception as e:
+                print(f"Error generating image for {emotion}: {str(e)}")
+                emotion_images[emotion] = {'status': 'error', 'message': str(e)}
+            
+            # 각 요청 사이에 잠시 대기
+            await asyncio.sleep(2)
+        
+        return {"status": "complete", "images": emotion_images}
+    except Exception as e:
+        print(f"Error in generate_persona_image: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+
+async def make_character_websocket(prompt_text: str, workflow: dict, image: Image.Image, emotion: str):
+    print(f"Starting image generation for {emotion}")
+    
+    # PIL 이미지 객체를 바이트로 변환
+    img_byte_arr = BytesIO()
+    image.save(img_byte_arr, format='PNG')
+    image_data = img_byte_arr.getvalue()
+    
+    # 랜덤 시드 생성
+    random_seed = random.randint(0, 2**32 - 1)
+    
+    # 25,34 positive prompt
+    workflow["25"]["inputs"]["text"] = prompt_text
+    workflow["34"]["inputs"]["text"] = prompt_text
+
+    # 7,24 negative prompt (기존과 동일)
+    workflow["7"]["inputs"]["text"] = "Avoid cross-eyed appearances, unnatural eye alignment, or any distortion in the direction of the gaze. Ensure that the eyes are naturally aligned and symmetrical, with pupils centered and looking in the same direction. Do not generate mismatched or asymmetrical eye positions, and avoid any overly exaggerated or distorted reflections in the eyes`"
+    workflow["24"]["inputs"]["text"] = "Avoid cross-eyed appearances, unnatural eye alignment, or any distortion in the direction of the gaze. Ensure that the eyes are naturally aligned and symmetrical, with pupils centered and looking in the same direction. Do not generate mismatched or asymmetrical eye positions, and avoid any overly exaggerated or distorted reflections in the eyes"
+
+    # 랜덤 시드 적용 (19번과 28번 노드에 동일한 시드 적용)
+    workflow["19"]["inputs"]["noise_seed"] = random_seed
+    workflow["28"]["inputs"]["noise_seed"] = random_seed
+
+    url = f"{COMFYUI_URL}/upload/image"
+
+    # 고유한 파일 이름 생성
+    unique_filename = f"{uuid.uuid4()}.png"
+
+    form = aiohttp.FormData()
+    form.add_field("image", image_data, filename=unique_filename, content_type="image/png")
+    form.add_field('overwrite', 'true')
+
+    async with aiohttp.ClientSession() as session:
+        async with session.post(url, data=form) as response:
+            if response.status == 200:
+                workflow["1"]['inputs']['image'] = unique_filename
+                prompt_id = await queue_prompt(workflow)
+                result = await check_progress(prompt_id)
+
+                if result is None:
+                    return {'status': 'error', 'message': f'Timeout while generating image for {emotion}'}
+
+                if 'outputs' in result and '39' in result['outputs']:
+                    final_image_url = result['outputs']['39']['images'][0]['filename']
+                else:
+                    print(f"Unexpected result structure for {emotion}: {result}")
+                    return {'status': 'error', 'message': f'Unexpected result structure for {emotion}'}
+
+    if final_image_url:
+        local_image_path = os.path.join(COMFUI_OUTPUT_DIR, final_image_url)
+        destination_blob_name = f"generate_images/{emotion}_{final_image_url}"
+        firebase_url = upload_image_to_firebase(local_image_path, destination_blob_name)
+        return {'status': 'complete', 'image_url': firebase_url}
+    else:
+        return {'status': 'error', 'message': f'Failed to generate image for {emotion}'}
