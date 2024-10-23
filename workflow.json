@@ -1,0 +1,400 @@
+{
+  "1": {
+    "inputs": {
+      "image": "4b0ad214-e022-404c-967c-146f2fca31fa.jpg",
+      "upload": "image"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "Load Image"
+    }
+  },
+  "2": {
+    "inputs": {
+      "model": "SmilingWolfwd-vit-tagger-v3",
+      "threshold": 0.35000000000000003,
+      "character_threshold": 0.85,
+      "replace_underscore": false,
+      "trailing_comma": false,
+      "exclude_tags": "",
+      "tags": "1girl, solo, looking_at_viewer, short_hair, simple_background, brown_hair, brown_eyes, parted_lips, grey_background, sweater, lips, turtleneck, portrait, turtleneck_sweater, nose, realistic, black_sweater",
+      "image": [
+        "1",
+        0
+      ]
+    },
+    "class_type": "WD14Tagger|pysssss",
+    "_meta": {
+      "title": "WD14 Tagger 🐍"
+    }
+  },
+  "3": {
+    "inputs": {
+      "text": [
+        "2",
+        0
+      ],
+      "text2": "1girl, solo, looking_at_viewer, short_hair, simple_background, brown_hair, brown_eyes, parted_lips, grey_background, sweater, lips, turtleneck, portrait, turtleneck_sweater, nose, realistic, black_sweater"
+    },
+    "class_type": "ShowText|pysssss",
+    "_meta": {
+      "title": "✴️ U-NAI Get Text"
+    }
+  },
+  "4": {
+    "inputs": {
+      "ckpt_name": "disneyPixarCartoon_v10.safetensors"
+    },
+    "class_type": "CheckpointLoaderSimple",
+    "_meta": {
+      "title": "Load Checkpoint"
+    }
+  },
+  "7": {
+    "inputs": {
+      "text": "Avoid cross-eyed appearances, unnatural eye alignment, or any distortion in the direction of the gaze. Ensure that the eyes are naturally aligned and symmetrical, with pupils centered and looking in the same direction. Do not generate mismatched or asymmetrical eye positions, and avoid any overly exaggerated or distorted reflections in the eyes",
+      "clip": [
+        "38",
+        0
+      ]
+    },
+    "class_type": "CLIPTextEncode",
+    "_meta": {
+      "title": "CLIP Text Encode (Prompt) negative"
+    }
+  },
+  "9": {
+    "inputs": {
+      "ipadapter_file": "ip-adapter-faceid-plusv2_sd15.bin"
+    },
+    "class_type": "IPAdapterModelLoader",
+    "_meta": {
+      "title": "IPAdapter Model Loader"
+    }
+  },
+  "10": {
+    "inputs": {
+      "clip_name": "CLIP-ViT-H-14-laion2B-s32B-b79K.safetensors"
+    },
+    "class_type": "CLIPVisionLoader",
+    "_meta": {
+      "title": "Load CLIP Vision"
+    }
+  },
+  "11": {
+    "inputs": {
+      "provider": "CPU",
+      "model_name": "buffalo_l"
+    },
+    "class_type": "IPAdapterInsightFaceLoader",
+    "_meta": {
+      "title": "IPAdapter InsightFace Loader"
+    }
+  },
+  "12": {
+    "inputs": {
+      "lora_name": "ip-adapter-faceid-plusv2_sd15_lora.safetensors",
+      "strength_model": 0.6,
+      "model": [
+        "4",
+        0
+      ]
+    },
+    "class_type": "LoraLoaderModelOnly",
+    "_meta": {
+      "title": "LoraLoaderModelOnly"
+    }
+  },
+  "13": {
+    "inputs": {
+      "weight": 0.9,
+      "weight_faceidv2": 1.45,
+      "weight_type": "linear",
+      "combine_embeds": "concat",
+      "start_at": 0,
+      "end_at": 1,
+      "embeds_scaling": "V only",
+      "model": [
+        "12",
+        0
+      ],
+      "ipadapter": [
+        "9",
+        0
+      ],
+      "image": [
+        "1",
+        0
+      ],
+      "clip_vision": [
+        "10",
+        0
+      ],
+      "insightface": [
+        "11",
+        0
+      ]
+    },
+    "class_type": "IPAdapterFaceID",
+    "_meta": {
+      "title": "IPAdapter FaceID"
+    }
+  },
+  "15": {
+    "inputs": {
+      "width": 512,
+      "height": 512,
+      "batch_size": 1
+    },
+    "class_type": "EmptyLatentImage",
+    "_meta": {
+      "title": "Empty Latent Image"
+    }
+  },
+  "19": {
+    "inputs": {
+      "add_noise": "enable",
+      "noise_seed": 377717113117786,
+      "steps": 30,
+      "cfg": 2,
+      "sampler_name": "dpmpp_2m_sde_gpu",
+      "scheduler": "karras",
+      "start_at_step": 0,
+      "end_at_step": 20,
+      "return_with_leftover_noise": "enable",
+      "model": [
+        "13",
+        0
+      ],
+      "positive": [
+        "36",
+        0
+      ],
+      "negative": [
+        "36",
+        1
+      ],
+      "latent_image": [
+        "15",
+        0
+      ]
+    },
+    "class_type": "KSamplerAdvanced",
+    "_meta": {
+      "title": "KSampler (Advanced)"
+    }
+  },
+  "23": {
+    "inputs": {
+      "ckpt_name": "realcartoonPixar_v10.safetensors"
+    },
+    "class_type": "CheckpointLoaderSimple",
+    "_meta": {
+      "title": "Load Checkpoint"
+    }
+  },
+  "24": {
+    "inputs": {
+      "text": "Avoid cross-eyed appearances, unnatural eye alignment, or any distortion in the direction of the gaze. Ensure that the eyes are naturally aligned and symmetrical, with pupils centered and looking in the same direction. Do not generate mismatched or asymmetrical eye positions, and avoid any overly exaggerated or distorted reflections in the eyes",
+      "clip": [
+        "29",
+        0
+      ]
+    },
+    "class_type": "CLIPTextEncode",
+    "_meta": {
+      "title": "CLIP Text Encode (Prompt)"
+    }
+  },
+  "25": {
+    "inputs": {
+      "text": "Create a cheerful and energetic character inspired by the style of Joy from the movie 'Inside Out'. The character should have yellow hair that bounces as they move, reflecting their playful and optimistic personality. Their face should be highly expressive with large, sparkling eyes full of joy, and a wide, radiant smile that lights up their entire face. The character's emotions should be exaggerated, with every movement and facial expression radiating pure excitement and happiness. The background should use light, pastel tones to emphasize the character's bright and optimistic nature., ,yellow hair, yellow",
+      "clip": [
+        "29",
+        0
+      ]
+    },
+    "class_type": "CLIPTextEncode",
+    "_meta": {
+      "title": "CLIP Text Encode (Prompt)"
+    }
+  },
+  "26": {
+    "inputs": {
+      "samples": [
+        "28",
+        0
+      ],
+      "vae": [
+        "27",
+        0
+      ]
+    },
+    "class_type": "VAEDecode",
+    "_meta": {
+      "title": "VAE Decode"
+    }
+  },
+  "27": {
+    "inputs": {
+      "vae_name": "vaeFtMse840000EmaPruned_vaeFtMse840k.safetensors"
+    },
+    "class_type": "VAELoader",
+    "_meta": {
+      "title": "Load VAE"
+    }
+  },
+  "28": {
+    "inputs": {
+      "add_noise": "disable",
+      "noise_seed": 216994469212231,
+      "steps": 30,
+      "cfg": 8,
+      "sampler_name": "dpmpp_2m_sde_gpu",
+      "scheduler": "karras",
+      "start_at_step": 20,
+      "end_at_step": 10000,
+      "return_with_leftover_noise": "disable",
+      "model": [
+        "23",
+        0
+      ],
+      "positive": [
+        "25",
+        0
+      ],
+      "negative": [
+        "24",
+        0
+      ],
+      "latent_image": [
+        "19",
+        0
+      ]
+    },
+    "class_type": "KSamplerAdvanced",
+    "_meta": {
+      "title": "KSampler (Advanced)"
+    }
+  },
+  "29": {
+    "inputs": {
+      "stop_at_clip_layer": -2,
+      "clip": [
+        "23",
+        1
+      ]
+    },
+    "class_type": "CLIPSetLastLayer",
+    "_meta": {
+      "title": "CLIP Set Last Layer"
+    }
+  },
+  "31": {
+    "inputs": {
+      "text": [
+        "3",
+        0
+      ],
+      "clip": [
+        "38",
+        0
+      ]
+    },
+    "class_type": "CLIPTextEncode",
+    "_meta": {
+      "title": "CLIP Text Encode (Prompt)"
+    }
+  },
+  "34": {
+    "inputs": {
+      "text": "Create a cheerful and energetic character inspired by the style of Joy from the movie 'Inside Out'. The character should have yellow hair that bounces as they move, reflecting their playful and optimistic personality. Their face should be highly expressive with large, sparkling eyes full of joy, and a wide, radiant smile that lights up their entire face. The character's emotions should be exaggerated, with every movement and facial expression radiating pure excitement and happiness. The background should use light, pastel tones to emphasize the character's bright and optimistic nature.,yellow hair, yellow",
+      "clip": [
+        "38",
+        0
+      ]
+    },
+    "class_type": "CLIPTextEncode",
+    "_meta": {
+      "title": "CLIP Text Encode (Prompt)"
+    }
+  },
+  "35": {
+    "inputs": {
+      "conditioning_to": [
+        "31",
+        0
+      ],
+      "conditioning_from": [
+        "34",
+        0
+      ]
+    },
+    "class_type": "ConditioningConcat",
+    "_meta": {
+      "title": "Conditioning (Concat)"
+    }
+  },
+  "36": {
+    "inputs": {
+      "strength": 0.25,
+      "start_percent": 0,
+      "end_percent": 1,
+      "positive": [
+        "35",
+        0
+      ],
+      "negative": [
+        "7",
+        0
+      ],
+      "control_net": [
+        "37",
+        0
+      ],
+      "image": [
+        "1",
+        0
+      ]
+    },
+    "class_type": "ControlNetApplyAdvanced",
+    "_meta": {
+      "title": "Apply ControlNet"
+    }
+  },
+  "37": {
+    "inputs": {
+      "control_net_name": "control_v11f1p_sd15_depth.pth"
+    },
+    "class_type": "ControlNetLoader",
+    "_meta": {
+      "title": "Load ControlNet Model"
+    }
+  },
+  "38": {
+    "inputs": {
+      "stop_at_clip_layer": -1,
+      "clip": [
+        "4",
+        1
+      ]
+    },
+    "class_type": "CLIPSetLastLayer",
+    "_meta": {
+      "title": "CLIP Set Last Layer"
+    }
+  },
+  "39": {
+    "inputs": {
+      "filename_prefix": "ComfyUI",
+      "images": [
+        "26",
+        0
+      ]
+    },
+    "class_type": "SaveImage",
+    "_meta": {
+      "title": "Save Image"
+    }
+  }
+}

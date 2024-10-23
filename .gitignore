@@ -1,0 +1,11 @@
+# 환경 변수 파일
+.env
+
+# Firebase 서비스 계정 키
+mirrorgram-20713-firebase-adminsdk-u9pdx-c3e12134b4.json
+
+# 기타 일반적인 무시 항목
+__pycache__/
+*.pyc
+.vscode/
+.idea/
