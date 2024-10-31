@@ -20,6 +20,8 @@ firebase_admin.initialize_app(cred, {
 })
 
 
+db = firestore.client()
+
 
 app = FastAPI()
 
@@ -42,29 +44,6 @@ async def generate_persona_image_endpoint(uid: str, image : UploadFile=File(...)
 @app.post("/regenerate-image/{emotion}")
 async def regenerate_image_endpoint(emotion: str, image : UploadFile=File(...)):
     return await regenerate_image(emotion, image)
-
-@app.post("/image-generate-default/{uid}/{gender}")
-async def image_generate_default(uid: str, gender: str , image : UploadFile=File(...)):
-    print("image_generate_default 호출")
-    print(gender)
-    print(image)
-    if image is None:
-        if gender == "male":
-            image_path = 'assets/images/male.jpg'
-        else:
-            image_path = 'assets/images/female.webp'
-        
-        image = load_image(image_path)
-        
-        if image is None:
-            print("기본 이미지를 불러오는 데 실패했습니다.")
-            # 여기에 오류 처리 로직을 추가할 수 있습니다.
-            return await generate_persona_image(uid,image)
-        else:
-            return await generate_persona_image(uid,image)
-    else:
-        return await generate_persona_image(uid,image)
-    
 
 
 
@@ -124,14 +103,19 @@ async def image_generate_default_websocket(uid: str, websocket: WebSocket):
 
         if response['status'] == 'complete':
             images = response['images']
-            persona_data = {
+            persona_data = {"persona" : {
                 'anger' : images['anger']['image_url'],
                 'disgust' : images['disgust']['image_url'],
                 'joy' : images['joy']['image_url'],
                 'sadness' : images['sadness']['image_url'],
                 'serious' : images['serious']['image_url']
             }
-            
+            }
+
+            user_ref = db.collection('users').document(uid)
+            result = user_ref.update(persona_data)
+
+            print('result ==================================', result)
             # 클라이언트에 성공 응답
             await websocket.send_text(json.dumps({
                 "status": "success",
@@ -157,9 +141,3 @@ if __name__ == "__main__":
     print("FastAPI 서버 실행")
     uvicorn.run(app, host="0.0.0.0", port=1818)
 
-def load_image(file_path):
-    if os.path.exists(file_path):
-        return Image.open(file_path)
-    else:
-        print(f"이미지 파일을 찾을 수 없습니다: {file_path}")
-        return None

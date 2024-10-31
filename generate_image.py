@@ -207,8 +207,8 @@ async def make_character_websocket(prompt_text: str, workflow: dict, image: Imag
     workflow["34"]["inputs"]["text"] = prompt_text
 
     # 7,24 negative prompt (기존과 동일)
-    workflow["7"]["inputs"]["text"] = "Avoid cross-eyed appearances, unnatural eye alignment, or any distortion in the direction of the gaze. Ensure that the eyes are naturally aligned and symmetrical, with pupils centered and looking in the same direction. Do not generate mismatched or asymmetrical eye positions, and avoid any overly exaggerated or distorted reflections in the eyes`"
-    workflow["24"]["inputs"]["text"] = "Avoid cross-eyed appearances, unnatural eye alignment, or any distortion in the direction of the gaze. Ensure that the eyes are naturally aligned and symmetrical, with pupils centered and looking in the same direction. Do not generate mismatched or asymmetrical eye positions, and avoid any overly exaggerated or distorted reflections in the eyes"
+    workflow["7"]["inputs"]["text"] = "cross-eyed, unnatural eye alignment, distorted gaze direction, mismatched eye position, asymmetrical eyes, exaggerated reflections in eyes, blurred lips, smudged lips, distorted mouth, missing teeth, uneven teeth, broken teeth, overly sharp or exaggerated teeth, unnatural skin texture, unrealistic facial symmetry, artifacts, low quality, deformed face features, blurry details"
+    workflow["24"]["inputs"]["text"] = "cross-eyed, unnatural eye alignment, distorted gaze direction, mismatched eye position, asymmetrical eyes, exaggerated reflections in eyes, blurred lips, smudged lips, distorted mouth, missing teeth, uneven teeth, broken teeth, overly sharp or exaggerated teeth, unnatural skin texture, unrealistic facial symmetry, artifacts, low quality, deformed face features, blurry details"
 
     # 랜덤 시드 적용 (19번과 28번 노드에 동일한 시드 적용)
     workflow["19"]["inputs"]["noise_seed"] = random_seed
