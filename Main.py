@@ -49,7 +49,6 @@ async def generate_persona_image_endpoint(
     return await generate_v2_persona_image(uid, image, customPersona)
 
 
-    
 
 @app.post("/generate-persona-image/{uid}")
 async def generate_persona_image_endpoint(uid: str, image : UploadFile=File(...)):
