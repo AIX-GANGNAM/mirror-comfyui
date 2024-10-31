@@ -35,7 +35,21 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.post("/generate-persona-image")
+async def generate_persona_image_endpoint(
+    uid : UploadFile=File(...),
+    image : UploadFile=File(...),
+    customPersona : UploadFile=File(...),
+):
+    print("generate_persona_image_endpoint 호출")
+    print(uid)
+    print(image)
+    print(customPersona)
 
+    return await generate_v2_persona_image(uid, image, customPersona)
+
+
+    
 
 @app.post("/generate-persona-image/{uid}")
 async def generate_persona_image_endpoint(uid: str, image : UploadFile=File(...)):

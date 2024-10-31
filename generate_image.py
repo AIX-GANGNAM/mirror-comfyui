@@ -246,3 +246,12 @@ async def make_character_websocket(prompt_text: str, workflow: dict, image: Imag
         return {'status': 'complete', 'image_url': firebase_url}
     else:
         return {'status': 'error', 'message': f'Failed to generate image for {emotion}'}
+
+
+
+def generate_v2_persona_image(uid, image, customPersona):
+    print("generate_v2_persona_image 호출")
+    print(uid)
+    print(image)
+    print(customPersona)
+
