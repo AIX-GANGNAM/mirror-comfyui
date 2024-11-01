@@ -45,19 +45,11 @@ async def generate_persona_images(
     uid: str = Form(...)
 ):
     user_ref = db.collection('users').document(uid).get().to_dict()
-
-    clone_prompt = ''
-    clone_prompt += f"communicationStyle : {user_ref['profile']['communicationStyle']}"
-    clone_prompt += f"decisionStyle : {user_ref['profile']['decisionStyle']}"
-    clone_prompt += f"interests : {user_ref['profile']['interests']}"
-    clone_prompt += f"MBTI : {user_ref['profile']['mbti']}"
-    clone_prompt += f"personality : {user_ref['profile']['personality']}"
-    clone_prompt += f"value : {user_ref['profile']['values']}"
     
     persona_data = json.loads(customPersona) if isinstance(customPersona, str) else customPersona
 
     prompt['custom'] = persona_data['personality']
-    prompt['clone'] = clone_prompt
+    prompt['clone'] = ''
 
     try:
         final_image = None
@@ -73,7 +65,7 @@ async def generate_persona_images(
             final_image = Image.open(image_path)
         
         # 이제 동일한 함수로 처리
-        return await generate_v2_persona_image(uid, final_image, customPersona, prompt)
+        return await generate_v2_persona_image(uid, final_image, customPersona, prompt ,db)
         
     except Exception as e:
         print(f"Error: {str(e)}")

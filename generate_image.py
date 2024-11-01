@@ -245,7 +245,7 @@ async def make_character_websocket(prompt_text: str, workflow: dict, image: Imag
 
 
 
-async def generate_v2_persona_image(uid, final_image, customPersona, prompt):
+async def generate_v2_persona_image(uid, final_image, customPersona, prompt, db):
     print("generate_v2_persona_image 호출")
     print(uid)
     print(final_image)
@@ -255,14 +255,27 @@ async def generate_v2_persona_image(uid, final_image, customPersona, prompt):
     try:
         workflow = await load_workflow('workflow.json')
         
-        emotions = ["joy", "sadness", "anger", "clone", "custom"]
+        # emotions = ["joy", "sadness", "anger", "custom", "clone"]
+        emotions = ["custom", "clone" , "joy" , "anger" , "sadness"]
         emotion_images = {}
 
+        user_ref = db.collection('users').document(uid)
+
+        
+
+        user_doc = user_ref.get().to_dict()
+
+        print("=================================")
+
+        user_persona = user_doc['persona']
+        
+        print(user_persona)
         for emotion in emotions:
             try:
                 result = await make_character(prompt[emotion], copy.deepcopy(workflow), final_image, emotion)
                 emotion_images[emotion] = result
                 print(f"Generated image for {emotion}: {result}")
+
             except Exception as e:
                 print(f"Error generating image for {emotion}: {str(e)}")
                 emotion_images[emotion] = {'status': 'error', 'message': str(e)}
@@ -270,6 +283,61 @@ async def generate_v2_persona_image(uid, final_image, customPersona, prompt):
             # 각 요청 사이에 잠시 대기
             await asyncio.sleep(2)
         
+
+
+        print('9999')
+
+
+        while len(user_persona) < 5:
+            index = len(user_persona)
+            user_persona.append({})
+
+
+        # print(1)
+        # user_persona[0]['IMG'] = emotion_images['custom']['image_url']
+        # print(2)
+        # user_persona[1]['IMG'] = emotion_images['clone']['image_url']
+        # print(3)
+        # user_persona[2]['Name'] = "Joy"
+        # user_persona[2]['IMG'] = emotion_images['joy']['image_url']
+        # print(4)
+        # user_persona[3]['Name'] = "Anger"
+        # user_persona[3]['IMG'] = emotion_images['anger']['image_url']
+        # print(5)
+        # user_persona[4]['Name'] = "Sadness"
+        # user_persona[4]['IMG'] = emotion_images['sadness']['image_url']
+
+
+        for i, persona in enumerate(user_persona):
+            if i == 0:
+                persona['IMG'] = emotion_images['custom']['image_url']
+            elif i == 1:
+                persona['IMG'] = emotion_images['clone']['image_url']
+            elif i == 2:
+                persona['IMG'] = emotion_images['joy']['image_url']
+                persona['Name'] = 'Joy'  # 필요한 경우 이름 수정
+                persona['DPNAME'] = "기쁨이"
+            elif i == 3:
+                persona['IMG'] = emotion_images['anger']['image_url']
+                persona['Name'] = 'Anger'
+                persona['DPNAME'] = '화남이'
+            elif i == 4:
+                persona['IMG'] = emotion_images['sadness']['image_url']
+                persona['Name'] = 'Sadness'
+                persona['DPNAME'] = "슬픔이"
+
+            
+        print("Updated user_persona:", user_persona)
+
+        print('1111')
+
+        user_ref.set(
+            {"persona" : user_persona},
+            merge=True
+        )
+
+        print('1212')
+
         return {"status": "complete", "images": emotion_images}
     except Exception as e:
         print(f"Error in generate_persona_image: {str(e)}")
