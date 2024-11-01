@@ -1,4 +1,5 @@
-from fastapi import FastAPI, File, UploadFile, WebSocket
+from fastapi import FastAPI, File, UploadFile, WebSocket, Form
+from typing import Optional
 from PIL import Image
 import json
 import base64
@@ -12,6 +13,7 @@ from generate_image import *
 from dotenv import load_dotenv
 from fastapi.middleware.cors import CORSMiddleware
 
+from image_prompt import prompt
 load_dotenv()
 
 cred = credentials.Certificate("mirrorgram-20713-firebase-adminsdk-u9pdx-c3e12134b4.json")
@@ -35,18 +37,58 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.post("/generate-persona-image")
-async def generate_persona_image_endpoint(
-    uid : UploadFile=File(...),
-    image : UploadFile=File(...),
-    customPersona : UploadFile=File(...),
+@app.post("/generate-persona-images")
+async def generate_persona_images(
+    image: Optional[UploadFile] = File(None),
+    customPersona: str = Form(...),
+    uid: str = Form(...)
 ):
-    print("generate_persona_image_endpoint 호출")
-    print(uid)
-    print(image)
-    print(customPersona)
+    user_ref = db.collection('users').document(uid).get().to_dict()
 
-    return await generate_v2_persona_image(uid, image, customPersona)
+    clone_prompt = ''
+    clone_prompt += f"communicationStyle : {user_ref['profile']['communicationStyle']}"
+    clone_prompt += f"decisionStyle : {user_ref['profile']['decisionStyle']}"
+    clone_prompt += f"interests : {user_ref['profile']['interests']}"
+    clone_prompt += f"MBTI : {user_ref['profile']['mbti']}"
+    clone_prompt += f"personality : {user_ref['profile']['personality']}"
+    clone_prompt += f"value : {user_ref['profile']['values']}"
+    
+    persona_data = json.loads(customPersona) if isinstance(customPersona, str) else customPersona
+
+    prompt['custom'] = persona_data['personality']
+    prompt['clone'] = clone_prompt
+
+    try:
+        # FormData 내용 확인용 로그
+        print(f"Received UID: {uid}")
+        print(f"Received Custom Persona: {customPersona}")
+
+       
+
+        print(f"Received File: {image.filename if image else 'No file'}")
+
+        
+
+
+        if not (image):
+            gender = user_ref['profile']['gender']
+            if(gender == 'male'):
+                image_path = 'assets/images/male.jpg'
+                image = Image.open(image_path)
+                return await generate_v2_persona_image(uid, image, customPersona , prompt)
+            else:
+                image_path = 'assets/images/female.webp'
+                image = Image.open(image_path)
+                return await generate_v2_persona_image(uid, image, customPersona , prompt)
+
+
+        
+        # 여기에 처리 로직 추가
+        return {"status": "success"}
+        
+    except Exception as e:
+        print(f"Error: {str(e)}")
+        return {"error": str(e)}
 
 
 
@@ -154,3 +196,4 @@ if __name__ == "__main__":
     print("FastAPI 서버 실행")
     uvicorn.run(app, host="0.0.0.0", port=1818)
 
+# uvicorn Main:app --host 0.0.0.0 --port 1818 --reload

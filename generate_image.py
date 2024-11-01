@@ -249,9 +249,39 @@ async def make_character_websocket(prompt_text: str, workflow: dict, image: Imag
 
 
 
-def generate_v2_persona_image(uid, image, customPersona):
+async def generate_v2_persona_image(uid, image, customPersona, prompt):
     print("generate_v2_persona_image 호출")
     print(uid)
     print(image)
     print(customPersona)
+    print(prompt)
+
+    try:
+        workflow = await load_workflow('workflow.json')
+        
+        emotions = ["joy", "sadness", "anger", "clone", "custom"]
+        emotion_images = {}
+
+        for emotion in emotions:
+            try:
+                result = await make_character(prompt[emotion], copy.deepcopy(workflow), image, emotion)
+                emotion_images[emotion] = result
+                print(f"Generated image for {emotion}: {result}")
+            except Exception as e:
+                print(f"Error generating image for {emotion}: {str(e)}")
+                emotion_images[emotion] = {'status': 'error', 'message': str(e)}
+            
+            # 각 요청 사이에 잠시 대기
+            await asyncio.sleep(2)
+        
+        return {"status": "complete", "images": emotion_images}
+    except Exception as e:
+        print(f"Error in generate_persona_image: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+
+
+
+    
+
+
 
