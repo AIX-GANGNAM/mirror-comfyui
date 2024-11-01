@@ -96,35 +96,31 @@ def upload_image_to_firebase(local_image_path, destination_blob_name):
     return blob.public_url
 
 
-async def make_character(prompt_text: str, workflow: dict, image: UploadFile, emotion: str):
+async def make_character(prompt_text: str, workflow: dict, image, emotion: str):
     print(f"Starting image generation for {emotion}")
     
-    # 랜덤 시드 생성
     random_seed = random.randint(0, 2**32 - 1)
-    
-    # 25,34 positive prompt
     workflow["25"]["inputs"]["text"] = prompt_text
     workflow["34"]["inputs"]["text"] = prompt_text
-
-    # 7,24 negative prompt (기존과 동일)
-    workflow["7"]["inputs"]["text"] = "Avoid cross-eyed appearances, unnatural eye alignment, or any distortion in the direction of the gaze. Ensure that the eyes are naturally aligned and symmetrical, with pupils centered and looking in the same direction. Do not generate mismatched or asymmetrical eye positions, and avoid any overly exaggerated or distorted reflections in the eyes`"
-    workflow["24"]["inputs"]["text"] = "Avoid cross-eyed appearances, unnatural eye alignment, or any distortion in the direction of the gaze. Ensure that the eyes are naturally aligned and symmetrical, with pupils centered and looking in the same direction. Do not generate mismatched or asymmetrical eye positions, and avoid any overly exaggerated or distorted reflections in the eyes"
-
-    # 랜덤 시드 적용 (19번과 28번 노드에 동일한 시드 적용)
     workflow["19"]["inputs"]["noise_seed"] = random_seed
     workflow["28"]["inputs"]["noise_seed"] = random_seed
 
     url = f"{COMFYUI_URL}/upload/image"
-    file_content = await image.read()
-    await image.seek(0)  # 파일 포인터를 처음으로 되돌림
-
-    # 파일 확장자 추출
-    _, ext = os.path.splitext(image.filename)
-    # 고유한 파일 이름 생성
-    unique_filename = f"{uuid.uuid4()}{ext}"
-
+    unique_filename = f"{uuid.uuid4()}.png"
     form = aiohttp.FormData()
-    form.add_field("image", file_content, filename=unique_filename, content_type=image.content_type)
+
+    # 이미지 타입에 따른 처리
+    if isinstance(image, UploadFile):
+        file_content = await image.read()
+        await image.seek(0)
+        content_type = image.content_type
+    else:  # PIL Image
+        img_byte_arr = BytesIO()
+        image.save(img_byte_arr, format='PNG')
+        file_content = img_byte_arr.getvalue()
+        content_type = "image/png"
+
+    form.add_field("image", file_content, filename=unique_filename, content_type=content_type)
     form.add_field('overwrite', 'true')
 
     async with aiohttp.ClientSession() as session:
@@ -249,10 +245,10 @@ async def make_character_websocket(prompt_text: str, workflow: dict, image: Imag
 
 
 
-async def generate_v2_persona_image(uid, image, customPersona, prompt):
+async def generate_v2_persona_image(uid, final_image, customPersona, prompt):
     print("generate_v2_persona_image 호출")
     print(uid)
-    print(image)
+    print(final_image)
     print(customPersona)
     print(prompt)
 
@@ -264,7 +260,7 @@ async def generate_v2_persona_image(uid, image, customPersona, prompt):
 
         for emotion in emotions:
             try:
-                result = await make_character(prompt[emotion], copy.deepcopy(workflow), image, emotion)
+                result = await make_character(prompt[emotion], copy.deepcopy(workflow), final_image, emotion)
                 emotion_images[emotion] = result
                 print(f"Generated image for {emotion}: {result}")
             except Exception as e:

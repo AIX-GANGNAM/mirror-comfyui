@@ -8,6 +8,7 @@ import os
 from firebase_admin import firestore
 import firebase_admin
 from firebase_admin import credentials
+from io import BytesIO
 
 from generate_image import *
 from dotenv import load_dotenv
@@ -59,32 +60,20 @@ async def generate_persona_images(
     prompt['clone'] = clone_prompt
 
     try:
-        # FormData 내용 확인용 로그
-        print(f"Received UID: {uid}")
-        print(f"Received Custom Persona: {customPersona}")
-
-       
-
-        print(f"Received File: {image.filename if image else 'No file'}")
-
+        final_image = None
         
-
-
-        if not (image):
+        if image:
+            # UploadFile을 PIL Image로 변환
+            contents = await image.read()
+            final_image = Image.open(BytesIO(contents))
+        else:
+            # 기본 이미지 로드
             gender = user_ref['profile']['gender']
-            if(gender == 'male'):
-                image_path = 'assets/images/male.jpg'
-                image = Image.open(image_path)
-                return await generate_v2_persona_image(uid, image, customPersona , prompt)
-            else:
-                image_path = 'assets/images/female.webp'
-                image = Image.open(image_path)
-                return await generate_v2_persona_image(uid, image, customPersona , prompt)
-
-
+            image_path = 'assets/images/male.jpg' if gender == 'male' else 'assets/images/female.webp'
+            final_image = Image.open(image_path)
         
-        # 여기에 처리 로직 추가
-        return {"status": "success"}
+        # 이제 동일한 함수로 처리
+        return await generate_v2_persona_image(uid, final_image, customPersona, prompt)
         
     except Exception as e:
         print(f"Error: {str(e)}")
