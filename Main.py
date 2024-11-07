@@ -48,7 +48,18 @@ async def generate_persona_images(
     
     persona_data = json.loads(customPersona) if isinstance(customPersona, str) else customPersona
 
-    prompt['custom'] = persona_data['personality']
+    # prompt['custom'] = persona_data['personality']
+    prompt['custom'] = f"""
+
+    make character based on
+
+    your name is {persona_data['DPNAME']}
+
+    description : {persona_data['description']}
+
+    speech : {persona_data['tone']} 
+"""
+
     prompt['clone'] = ''
 
     try:
@@ -69,15 +80,7 @@ async def generate_persona_images(
         
     except Exception as e:
         print(f"Error: {str(e)}")
-        return {"error": str(e)}
-
-
-
-@app.post("/generate-persona-image/{uid}")
-async def generate_persona_image_endpoint(uid: str, image : UploadFile=File(...)):
-    return await generate_persona_image(uid,image)
-
-@app.post("/regenerate-image/{emotion}")
+        return {"error": str(e)}3
 async def regenerate_image_endpoint(emotion: str, image : UploadFile=File(...)):
     return await regenerate_image(emotion, image)
 
