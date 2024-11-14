@@ -53,14 +53,14 @@ async def generate_persona_images(
 
     make character based on
 
-    your name is {persona_data['DPNAME']}
+    your name is {persona_data['name']}
 
-    description : {persona_data['description']}
+    personality : {persona_data['personality']}
 
-    speech : {persona_data['tone']} 
+    speech : {persona_data['speechStyle']} 
 """
 
-    prompt['clone'] = ''
+    prompt['clone'] = 'color'
 
     try:
         final_image = None
@@ -80,7 +80,7 @@ async def generate_persona_images(
         
     except Exception as e:
         print(f"Error: {str(e)}")
-        return {"error": str(e)}3
+        return {"error": str(e)}
 async def regenerate_image_endpoint(emotion: str, image : UploadFile=File(...)):
     return await regenerate_image(emotion, image)
 
